@@ -36,4 +36,4 @@ inst(joconde,objet).
 
 instR(michelAnge, david, aCree).
 instR(michelAnge, sonnets, aEcrit).
-instR(vinci, joconde, aCree)
+instR(vinci, joconde, aCree).
