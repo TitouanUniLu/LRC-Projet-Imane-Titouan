@@ -25,24 +25,27 @@ concept(C1) :- iname(C1).
 concept(C1) :- rname(C1).
 
 %autoref 
-autoref(C, C).
+autoref(C, C) :- cnamea(C), !.
+autoref(C, C) :- cnamena(C), !. 
+autoref(C, D) :- cnamena(D), equiv(D, D1), autoref(C, D1),!.
 autoref(C, and(C1, C2)) :- autoref(C, C1); autoref(C, C2),!.
-autoref(C, or(C1, C2)) :- autoref(C, C1); autoref(C, C2), !.
+autoref(C, or(C1, C2)) :- autoref(C, C1); autoref(C, C2),!.
 autoref(C, not(D)) :- autoref(C, D),!.
 autoref(C, some(_, C1)) :- autoref(C, C1),!.
 autoref(C, all(_, C1)) :- autoref(C, C1),!.
 
 %pas_autoref
-pas_autoref(C, D) :- 
-    \+ autoref(C, D).
+pas_autoref([equiv(C, E)|R]) :- 
+    \+ autoref(C, E), pas_autoref(R).
+pas_autoref([]).
 
-verifier_auto_reference(Tbox) :- 
-    member(equiv(Concept, Expression), Tbox),
-    autoref(Concept, Expression),
-    write('Erreur : Le concept complexe '), write(Concept), write(' est auto-referent.'), nl,
-    halt.
+verifier_auto_reference() :- 
+    setof(equiv(C, E), equiv(C, E), Tbox), 
+    (pas_autoref(Tbox), write('This Tbox is not auto-referent.'), nl,!
+    ;   write('Erreur : auto-reference detected '),fail), nl. 
 
 
 %traitement TBox  T
 
 %traitement ABox  T
+
