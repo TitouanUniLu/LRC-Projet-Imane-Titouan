@@ -1,3 +1,9 @@
+%TBOX
+equiv(sculpteur,and(personne,some(aCree,sculpture))).
+equiv(auteur,and(personne,some(aEcrit,livre))).
+equiv(editeur,and(personne,and(not(some(aEcrit,livre)),some(aEdite,livre)))).
+equiv(parent,and(personne,some(aEnfant,anything))).
+
 cnamea(personne).
 cnamea(livre).
 cnamea(objet).
@@ -20,12 +26,6 @@ rname(aCree).
 rname(aEcrit).
 rname(aEdite).
 rname(aEnfant).
-
-%TBOX
-equiv(sculpteur,and(personne,some(aCree,sculpture))).
-equiv(auteur,and(personne,some(aEcrit,livre))).
-equiv(editeur,and(personne,and(not(some(aEcrit,livre)),some(aEdite,livre)))).
-equiv(parent,and(personne,some(aEnfant,anything))).
 
 %ABox
 inst(michelAnge,personne).
