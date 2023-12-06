@@ -24,6 +24,14 @@ concept(C1) :- cnamena(C1).
 concept(C1) :- iname(C1).
 concept(C1) :- rname(C1).
 
+verifier_concept() :-
+    setof(E, equiv(_, E), Concepts),
+    member(C, Concepts),
+    \+ concept(C),
+    write('Invalid concept: '), write(C), nl,!, fail. % La fonction s'arrête dès qu'elle trouve un concept invalide
+verifier_concept :- 
+    write('Verification: Syntax and semantics are correct.'), nl.
+
 %autoref 
 autoref(C, C) :- cnamea(C), !.
 autoref(C, C) :- cnamena(C), !. 
@@ -35,14 +43,17 @@ autoref(C, some(_, C1)) :- autoref(C, C1),!.
 autoref(C, all(_, C1)) :- autoref(C, C1),!.
 
 %pas_autoref
-pas_autoref([equiv(C, E)|R]) :- 
+pas_autoref([(C, E)|R]) :- 
     \+ autoref(C, E), pas_autoref(R).
 pas_autoref([]).
 
+
 verifier_auto_reference() :- 
-    setof(equiv(C, E), equiv(C, E), Tbox), 
+    setof((C, E), equiv(C, E), Tbox), 
     (pas_autoref(Tbox), write('This Tbox is not auto-referent.'), nl,!
-    ;   write('Erreur : auto-reference detected '),fail), nl. 
+    ;   write('Erreur : auto-reference detected '),fail), nl.
+% Si aucune auto-référence n'est détectée, elle affiche un message indiquant que la T-Box n'est pas auto-référente.
+% Sinon, elle affiche un message d'erreur indiquant que l'auto-référence a été détectée et provoque un échec. 
 
 %remplacement récursif
 remplace(C, C) :- 
@@ -88,3 +99,16 @@ test2 :-
     traitement_Abox([(michelAnge, personne), (david, sculpture), (sonnets, livre)], ResultatAbox),
     writeln('Resultat du traitement de la TBox :'), writeln(ResultatTbox),
     writeln('Resultat du traitement de la ABox :'), writeln(ResultatAbox).
+
+traitement_Tbox_Abox() :- 
+    setof((C, E), equiv(C, E), Tbox), 
+    setof((I, C), inst(I, C), AboxC),
+    setof((I1, I2, R), instR(I1, I2, R), AboxR),
+    traitement_Tbox(Tbox, ResultatTbox),
+    traitement_Abox(AboxC, ResultatAboxC),
+    traitement_Abox(AboxR, ResultatAboxR),
+    writeln('Resultat du traitement de la TBox :'), writeln(ResultatTbox),
+    writeln('Resultat du traitement de la ABox :'), writeln(ResultatAboxC), writeln(ResultatAboxR).
+
+% exécute tous les vérifications et traitements
+partie1 :- verifier_concept(), verifier_auto_reference(), traitement_Tbox_Abox().
