@@ -142,25 +142,38 @@ suite(_, Abi, Abi1, Tbox) :-
     saisie_et_traitement_prop_a_demontrer(Abi, Abi1, Tbox).
 
 entrerInstance(I) :-
-    nl, write("Entrez l\'identifiant de l\'instance (I) : "), nl,
+    nl, write('Entrez l\'identifiant de l\'instance (I) : '), nl,
     read(I),
     iname(I) -> true ; 
-        write("Erreur : Instance invalide. Veuillez entrer une instance valide."), nl,
+        write('Erreur : Instance invalide. Veuillez entrer une instance valide.'), nl,
         entrerInstance(I).
 
 entrerConcept(C) :-
-    nl, write("Entrez l\'expression du concept (C) : "), nl,
+    nl, write('Entrez l\'expression du concept (C) : '), nl,
     read(C),
     concept(C) -> true ; 
-        write("Erreur : Concept invalide. Veuillez entrer un concept valide."), nl,
+        write('Erreur : Concept invalide. Veuillez entrer un concept valide.'), nl,
         entrerConcept(C).
 
 acquisition_prop_type1(_, [(I,C1)|_], _) :-
     entrerInstance(I),
     entrerConcept(C),
     remplace(not(C), NC), nnf(NC, C1),
-    nl, write("Proposition ajoutee avec succes : "), write(inst(I, C1)), nl.
+    nl, write('Proposition ajoutee avec succes : '), write(inst(I, C1)), nl.
 
 
-% acquisition_prop_type2(Abi, Abi1, Tbox) :-
+intersection_non_vide(C1, C2, Tbox) :-
+    member(equiv(_, E1), Tbox), % verifier qu'ils sont bien dans la TBox
+    member(equiv(_, E2), Tbox), % pareil
+    nnf(and(C1, E1), NC1),
+    nnf(and(C2, E2), NC2),
+    memberchk(and(_, _), [NC1, NC2]). % on verifie que l'intersection est vide
+
+acquisition_prop_type2(Abi, Abi1, Tbox) :-
+    entrerConcept(C1),
+    entrerConcept(C2),
+    \+ intersection_non_vide(C1, C2, Tbox), % \+ == 'non' pour verifier que l'inter est bien vide comme on cherche C1 ⊓ C2 ⊑ ⊥ 
+    append(Abi, [(C1, C2)], Abi1),
+    nl, write('Proposition ajoutee avec succes : '), write(concept_inter_vide(C1, C2)), nl.
+    
 
