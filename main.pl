@@ -260,31 +260,6 @@ affiche(all(R, C)) :- write("\u2200"), write(R), write("."), affiche(C), !.
 affiche(C) :- write(C).
 
 
-% Définition des listes représentant différents états de la Abox étendue
-etat_initial(Lie1, Lpt1, Li1, Lu1, Ls1, Abr1) :- 
-    Lie1 = [(i1, some(r1, c1)), (i2, some(r2, c2))],
-    Lpt1 = [(i3, all(r3, c3))],
-    Li1 = [(i4, and(c4, c5))],
-    Lu1 = [(i5, or(c6, c7))],
-    Ls1 = [(i6, c8), (i7, not(c9))],
-    Abr1 = [(i1, i2, r1), (i3, i4, r2)].
-
-etat_final(Lie2, Lpt2, Li2, Lu2, Ls2, Abr2) :- 
-    Lie2 = [(i1, some(r1, c1)), (i2, some(r2, c2)), (i8, some(r4, c10))],
-    Lpt2 = [(i3, all(r3, c3)), (i9, all(r5, c11))],
-    Li2 = [(i4, and(c4, c5)), (i10, and(c12, c13))],
-    Lu2 = [(i5, or(c6, c7)), (i11, or(c14, c15))],
-    Ls2 = [(i6, c8), (i7, not(c9)), (i12, c16)],
-    Abr2 = [(i1, i2, r1), (i3, i4, r2), (i13, i14, r6)].
-
-% Test du prédicat affiche_evolution_Abox
-test_affiche_evolution_Abox :- 
-    etat_initial(Lie1, Lpt1, Li1, Lu1, Ls1, Abr1),
-    etat_final(Lie2, Lpt2, Li2, Lu2, Ls2, Abr2),
-    affiche_evolution_Abox(Ls1, Lie1, Lpt1, Li1, Lu1, Abr1, Ls2, Lie2, Lpt2, Li2, Lu2, Abr2).
-
-% Appel du test
-
 
 
 
