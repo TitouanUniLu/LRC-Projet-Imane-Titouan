@@ -178,8 +178,10 @@ acquisition_prop_type2(Abi, Abi1, _) :-
     remplace(C2, CA2),
     nnf(and(CA1, CA2), NCA),
     genere(Nom),
-    concat(Abi, [(Nom, NCA)], Abi1),
-    nl, write('Proposition ajoutee avec succes : '), write(concept_inter_vide(C1, C2)), nl.   
+    nl, write('test4'),
+	concat(Abi, [(Nom, NCA)], Abi1),
+    nl, write('test5'),
+    nl, write('Proposition ajoutee avec succes : '), write(concept_inter_vide(C1, C2)), nl.
 
 
 
