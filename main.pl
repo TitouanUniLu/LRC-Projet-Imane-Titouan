@@ -187,7 +187,7 @@ acquisition_prop_type2(Abi, Abi1, _) :-
 
 
 
-%Trie les assertions de la Abox étendue dans différentes listes selon leur type
+% Trie les assertions de la Abox étendue dans différentes listes selon leur type
 
 tri_Abox([],[],[],[],[],[]).
 tri_Abox([(I,some(R,C))|Abi],[(I,some(R,C))|Lie],Lpt,Li,Lu,Ls) :- 
@@ -200,6 +200,7 @@ tri_Abox([(I,or(C1,C2))|Abi],Lie,Lpt,Li,[(I,or(C1,C2))|Lu],Ls) :-
     tri_Abox(Abi,Lie,Lpt,Li,Lu,Ls),!.
 tri_Abox([(I,C)|Abi],Lie,Lpt,Li,Lu,[(I,C)|Ls]) :- 
     tri_Abox(Abi,Lie,Lpt,Li,Lu,Ls),!.
+
 
 
 troisieme_etape(Abi1, Abr):- true.
