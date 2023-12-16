@@ -165,10 +165,11 @@ entrerConcept(C) :-
         write('Erreur : Concept invalide. Veuillez entrer un concept valide.'), nl,
         entrerConcept(C).
 
-acquisition_prop_type1(Abi, [(I,C1)|Abi], _) :-
+acquisition_prop_type1(Abi, Abi1, _) :-
     entrerInstance(I),
     entrerConcept(C),
     remplace(not(C), NC), nnf(NC, C1),
+    concat([(I,C1)], Abi, Abi1),
     nl, write('Proposition ajoutee avec succes : '), write(inst(I, C1)), nl.
 
 acquisition_prop_type2(Abi, Abi1, _) :-
@@ -179,9 +180,11 @@ acquisition_prop_type2(Abi, Abi1, _) :-
     nnf(and(CA1, CA2), NCA),
     genere(Nom),
     nl, write('test4'),
-	concat(Abi, [(Nom, NCA)], Abi1),
+	concat([(Nom, NCA)], Abi, Abi1),
     nl, write('test5'),
     nl, write('Proposition ajoutee avec succes : '), write(concept_inter_vide(C1, C2)), nl.
+
+
 
 
 
@@ -189,8 +192,13 @@ acquisition_prop_type2(Abi, Abi1, _) :-
 
 
 
-% Trie les assertions de la Abox étendue dans différentes listes selon leur type
+troisieme_etape(Abi,Abr) :-
+    tri_Abox(Abi,Lie,Lpt,Li,Lu,Ls),
+    resolution(Lie,Lpt,Li,Lu,Ls,Abr),
+    nl,write('Youpiiiiii, on a demontre la
+    proposition initiale !!!').
 
+% Trie les assertions de la Abox étendue dans différentes listes selon leur type
 tri_Abox([],[],[],[],[],[]).
 tri_Abox([(I,some(R,C))|Abi],[(I,some(R,C))|Lie],Lpt,Li,Lu,Ls) :- 
     tri_Abox(Abi,Lie,Lpt,Li,Lu,Ls),!.
@@ -203,9 +211,79 @@ tri_Abox([(I,or(C1,C2))|Abi],Lie,Lpt,Li,[(I,or(C1,C2))|Lu],Ls) :-
 tri_Abox([(I,C)|Abi],Lie,Lpt,Li,Lu,[(I,C)|Ls]) :- 
     tri_Abox(Abi,Lie,Lpt,Li,Lu,Ls),!.
 
+% Met à jour l'état de la Abox étendue en ajoutant une nouvelle assertion.
+% les assertions de concepts sont ajoutées à la liste correspondante.
+evolue((I, some(R, C)), Lie, Lpt, Li, Lu, Ls, Lie1, Lpt, Li, Lu, Ls) :-
+    concat([(I, some(R, C))], Lie, Lie1), !.
+evolue((I, and(C1, C2)), Lie, Lpt, Li, Lu, Ls, Lie, Lpt, Li1, Lu, Ls) :-
+    concat([(I, and(C1, C2))], Li, Li1), !.
+evolue((I, all(R, C)), Lie, Lpt, Li, Lu, Ls, Lie, Lpt1, Li, Lu, Ls) :-
+    concat([(I, all(R, C))], Lpt, Lpt1), !.
+evolue((I, or(C1, C2)), Lie, Lpt, Li, Lu, Ls, Lie, Lpt, Li, Lu1, Ls) :-
+    concat([(I, or(C1, C2))], Lu, Lu1), !.
+evolue((I, C), Lie, Lpt, Li, Lu, Ls, Lie, Lpt, Li, Lu, Ls1) :-
+    concat([(I, C)], Ls, Ls1), !.
+
+% appliquer la règle 'il existe'
+complete_some([(I,some(R,C)) | Lie], Lpt, Li, Lu, Ls, Abr) :-
+	genere(Nom),                                                          % generer un nouvel objet
+	evolue((Nom, C), Lie, Lpt, Li, Lu, Ls, Lie1, Lpt1, Li1, Lu1, Ls1), 	  % ajouter la nouvelle assertion de concept
+	affiche_evolution_Abox(Ls, [(I,some(R,C)) | Lie], Lpt, Li, Lu, Abr, Ls1, Lie1, Lpt1, Li1, Lu1, [(I, Nom, R) | Abr]), 
+    resolution(Lie1, Lpt1, Li1, Lu1, Ls1, [(I, Nom, R) | Abr]). 	      % ajouter la nouvelle assertion de role + Appel récursif
+
+% appliquer la règle 'and'
+transformation_and(Lie,Lpt,[(I,and(C1,C2))|Li],Lu,Ls,Abr) :-
+    evolue((I,C1),Lie,Lpt,Li,Lu,Ls,Lie1,Lpt1,Li1,Lu1,Ls1),          % ajouter la partie gauche
+    evolue((I,C2),Lie1,Lpt1,Li1,Lu1,Ls1,Lie2,Lpt2,Li2,Lu2,Ls2),     % ajouter la partie droite
+	affiche_evolution_Abox(Ls, Lie, Lpt, [(I, and(C1,C2)) | Li], Lu, Abr, Ls1, Lie1, Lpt1, Li1, Lu1, Abr),
+    resolution(Lie2,Lpt2,Li2,Lu2,Ls2,Abr). 
+
+affiche_evolution_Abox(Ls1, Lie1, Lpt1, Li1, Lu1, Abr1, Ls2, Lie2, Lpt2, Li2, Lu2, Abr2) :- 
+    write("------------------------------------------------------------------------------------------"), nl,
+    write("Etat de depart de la Abox :"),
+    affiche(Ls1), affiche(Lie1), affiche(Lpt1), affiche(Li1), affiche(Lu1), affiche(Abr1), nl, nl,
+    write("Etat d’arrivee de la Abox :"),
+    affiche(Ls2), affiche(Lie2), affiche(Lpt2), affiche(Li2), affiche(Lu2), affiche(Abr2), nl,
+    write("------------------------------------------------------------------------------------------"), nl, !.
+
+affiche([]).
+affiche([X | Y]) :- affiche(X), affiche(Y).
+
+% Afficher un concept en utilisant les symboles mathématiques appropriés.
+affiche((I1, I2, R)) :- nl, write("<"), write(I1), write(","), write(I2), write(">: "), write(R), !.
+affiche((I, C)) :- nl, write(I), write(": "), affiche(C), !.
+affiche(not(C)) :- write("\u00AC"), affiche(C), !.
+affiche(and(C1, C2)) :- affiche(C1), write(" \u2A05 "), affiche(C2), !.
+affiche(or(C1, C2)) :- affiche(C1), write(" \u2A06 "), affiche(C2), !.
+affiche(some(R, C)) :- write("\u2203"), write(R), write("."), affiche(C), !.
+affiche(all(R, C)) :- write("\u2200"), write(R), write("."), affiche(C), !.
+affiche(C) :- write(C).
 
 
-troisieme_etape(Abi1, Abr):- true.
+% Définition des listes représentant différents états de la Abox étendue
+etat_initial(Lie1, Lpt1, Li1, Lu1, Ls1, Abr1) :- 
+    Lie1 = [(i1, some(r1, c1)), (i2, some(r2, c2))],
+    Lpt1 = [(i3, all(r3, c3))],
+    Li1 = [(i4, and(c4, c5))],
+    Lu1 = [(i5, or(c6, c7))],
+    Ls1 = [(i6, c8), (i7, not(c9))],
+    Abr1 = [(i1, i2, r1), (i3, i4, r2)].
+
+etat_final(Lie2, Lpt2, Li2, Lu2, Ls2, Abr2) :- 
+    Lie2 = [(i1, some(r1, c1)), (i2, some(r2, c2)), (i8, some(r4, c10))],
+    Lpt2 = [(i3, all(r3, c3)), (i9, all(r5, c11))],
+    Li2 = [(i4, and(c4, c5)), (i10, and(c12, c13))],
+    Lu2 = [(i5, or(c6, c7)), (i11, or(c14, c15))],
+    Ls2 = [(i6, c8), (i7, not(c9)), (i12, c16)],
+    Abr2 = [(i1, i2, r1), (i3, i4, r2), (i13, i14, r6)].
+
+% Test du prédicat affiche_evolution_Abox
+test_affiche_evolution_Abox :- 
+    etat_initial(Lie1, Lpt1, Li1, Lu1, Ls1, Abr1),
+    etat_final(Lie2, Lpt2, Li2, Lu2, Ls2, Abr2),
+    affiche_evolution_Abox(Ls1, Lie1, Lpt1, Li1, Lu1, Abr1, Ls2, Lie2, Lpt2, Li2, Lu2, Abr2).
+
+% Appel du test
 
 
 
@@ -249,4 +327,4 @@ chiffre_car(5,'5').
 chiffre_car(6,'6').
 chiffre_car(7,'7').
 chiffre_car(8,'8').
-chiffre_car(9,’9’).
+chiffre_car(9,'9').
