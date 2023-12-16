@@ -1,14 +1,4 @@
 :-[aboxtbox].
-compteur(1).
-% utils
-genere(Nom) :- compteur(V), nombre(V,L1),
-    concat([105,110,115,116],L1,L2),
-    V1 is V+1,
-    dynamic(compteur/1),
-    retract(compteur(V)),
-    dynamic(compteur/1),
-    assert(compteur(V1)),nl,nl,nl,
-    name(Nom,L2).
 
 %forme normale negative
 nnf(not(and(C1,C2)),or(NC1,NC2)):- nnf(not(C1),NC1), nnf(not(C2),NC2),!.
@@ -26,6 +16,9 @@ nnf(X,X).
 listTBox(Tbox) :- setof((C, E), equiv(C, E), Tbox).
 listAboxInst(AboxInst):- setof((I1, I2), inst(I1, I2), AboxInst).
 listAboxRole(AboxRole):- setof((I1, I2, R), instR(I1, I2, R), AboxRole).
+
+
+
 
 
 %Implémentation de la partie 1 
@@ -121,11 +114,16 @@ traitement_Tbox_Abox(Tbox, AboxInst, AboxRole) :-
     traitement_Tbox(Tbox, ResultatTbox),
     traitement_Abox(AboxInst, ResultatAboxInst),
     traitement_Abox(AboxRole, ResultatAboxRole),
-    writeln('Resultat du traitement de la TBox :'), writeln(ResultatTbox),
-    writeln('Resultat du traitement de la ABox :'), writeln(ResultatAboxInst), writeln(ResultatAboxRole).
+    write('Resultat du traitement de la TBox :'), nl, writeln(ResultatTbox), nl,
+    write('Resultat du traitement de la ABox :'), nl, writeln(ResultatAboxInst), writeln(ResultatAboxRole), nl.
 
-% exécute tous les vérifications et traitements
+% exécute tous les vérifications et traitements (partie1)
 premiere_etape(Tbox, Abi, Abr) :- verifier_concept(Tbox, Abi, Abr), verifier_auto_reference(Tbox), traitement_Tbox_Abox(Tbox, Abi, Abr).
+
+
+
+
+
 
 %Implémentation de la partie 2 
 
@@ -151,6 +149,7 @@ suite(_, Abi, Abi1, Tbox) :-
     nl, write('Cette réponse est incorrecte.'), nl,
     saisie_et_traitement_prop_a_demontrer(Abi, Abi1, Tbox).
 
+% Saisie de l'identifiant d'une instance
 entrerInstance(I) :-
     nl, write('Entrez l\'identifiant de l\'instance (I) : '), nl,
     read(I),
@@ -158,6 +157,7 @@ entrerInstance(I) :-
         write('Erreur : Instance invalide. Veuillez entrer une instance valide.'), nl,
         entrerInstance(I).
 
+% Saisie de l'identifiant d'un concept
 entrerConcept(C) :-
     nl, write('Entrez l\'expression du concept (C) : '), nl,
     read(C),
@@ -165,7 +165,7 @@ entrerConcept(C) :-
         write('Erreur : Concept invalide. Veuillez entrer un concept valide.'), nl,
         entrerConcept(C).
 
-acquisition_prop_type1(_, [(I,C1)|_], _) :-
+acquisition_prop_type1(Abi, [(I,C1)|Abi], _) :-
     entrerInstance(I),
     entrerConcept(C),
     remplace(not(C), NC), nnf(NC, C1),
@@ -174,14 +174,74 @@ acquisition_prop_type1(_, [(I,C1)|_], _) :-
 acquisition_prop_type2(Abi, Abi1, _) :-
     entrerConcept(C1),
     entrerConcept(C2),
-    nl, write('test1'),
     remplace(C1, CA1),
     remplace(C2, CA2),
-    nl, write('test2'),
     nnf(and(CA1, CA2), NCA),
-    nl, write('test3'),
     genere(Nom),
-    nl, write('test4'),
-	concat(Abi, [(Nom, NCA)], Abi1),
-    nl, write('test5'),
-    nl, write('Proposition ajoutee avec succes : '), write(concept_inter_vide(C1, C2)), nl.
+    concat(Abi, [(Nom, NCA)], Abi1),
+    nl, write('Proposition ajoutee avec succes : '), write(concept_inter_vide(C1, C2)), nl.   
+
+
+
+%Implémentation de la partie 3
+
+
+
+%Trie les assertions de la Abox étendue dans différentes listes selon leur type
+
+tri_Abox([],[],[],[],[],[]).
+tri_Abox([(I,some(R,C))|Abi],[(I,some(R,C))|Lie],Lpt,Li,Lu,Ls) :- 
+    tri_Abox(Abi,Lie,Lpt,Li,Lu,Ls),!.
+tri_Abox([(I,all(R,C))|Abi],Lie,[(I,all(R,C))|Lpt],Li,Lu,Ls) :- 
+    tri_Abox(Abi,Lie,Lpt,Li,Lu,Ls),!.
+tri_Abox([(I,and(C1,C2))|Abi],Lie,Lpt,[(I,and(C1,C2))|Li],Lu,Ls) :- 
+    tri_Abox(Abi,Lie,Lpt,Li,Lu,Ls),!.
+tri_Abox([(I,or(C1,C2))|Abi],Lie,Lpt,Li,[(I,or(C1,C2))|Lu],Ls) :- 
+    tri_Abox(Abi,Lie,Lpt,Li,Lu,Ls),!.
+tri_Abox([(I,C)|Abi],Lie,Lpt,Li,Lu,[(I,C)|Ls]) :- 
+    tri_Abox(Abi,Lie,Lpt,Li,Lu,Ls),!.
+
+
+troisieme_etape(Abi1, Abr):- true.
+
+
+
+
+
+
+%Utils
+
+concat([],L1,L1).
+concat([X|Y],L1,[X|L2]) :- concat(Y,L1,L2).
+
+enleve(X,[X|L],L) :-!.
+enleve(X,[Y|L],[Y|L2]) :- enleve(X,L,L2).
+
+compteur(1).
+
+genere(Nom) :- 
+    compteur(V),nombre(V,L1),
+    concat([105,110,115,116],L1,L2),
+    V1 is V+1,
+    dynamic(compteur/1),
+    retract(compteur(V)),
+    dynamic(compteur/1),
+    assert(compteur(V1)),nl,nl,nl,
+    name(Nom,L2).
+
+nombre(0,[]).
+nombre(X,L1) :-
+    R is (X mod 10),
+    Q is ((X-R)//10),
+    chiffre_car(R,R1),
+    char_code(R1,R2),
+    nombre(Q,L),
+    concat(L,[R2],L1).
+chiffre_car(0,'0').
+chiffre_car(1,'1').
+chiffre_car(2,'2').
+chiffre_car(3,'3').
+chiffre_car(4,'4').
+chiffre_car(5,'5').
+chiffre_car(6,'6').
+chiffre_car(7,'7').
