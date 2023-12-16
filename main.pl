@@ -1,4 +1,14 @@
 :-[aboxtbox].
+compteur(1).
+% utils
+genere(Nom) :- compteur(V), nombre(V,L1),
+    concat([105,110,115,116],L1,L2),
+    V1 is V+1,
+    dynamic(compteur/1),
+    retract(compteur(V)),
+    dynamic(compteur/1),
+    assert(compteur(V1)),nl,nl,nl,
+    name(Nom,L2).
 
 %forme normale negative
 nnf(not(and(C1,C2)),or(NC1,NC2)):- nnf(not(C1),NC1), nnf(not(C2),NC2),!.
@@ -161,19 +171,17 @@ acquisition_prop_type1(_, [(I,C1)|_], _) :-
     remplace(not(C), NC), nnf(NC, C1),
     nl, write('Proposition ajoutee avec succes : '), write(inst(I, C1)), nl.
 
-
-intersection_non_vide(C1, C2, Tbox) :-
-    member(equiv(_, E1), Tbox), % verifier qu'ils sont bien dans la TBox
-    member(equiv(_, E2), Tbox), % pareil
-    nnf(and(C1, E1), NC1),
-    nnf(and(C2, E2), NC2),
-    memberchk(and(_, _), [NC1, NC2]). % on verifie que l'intersection est vide
-
-acquisition_prop_type2(Abi, Abi1, Tbox) :-
+acquisition_prop_type2(Abi, Abi1, _) :-
     entrerConcept(C1),
     entrerConcept(C2),
-    \+ intersection_non_vide(C1, C2, Tbox), % \+ == 'non' pour verifier que l'inter est bien vide comme on cherche C1 ⊓ C2 ⊑ ⊥ 
-    append(Abi, [(C1, C2)], Abi1),
+    nl, write('test1'),
+    remplace(C1, CA1),
+    remplace(C2, CA2),
+    nl, write('test2'),
+    nnf(and(CA1, CA2), NCA),
+    nl, write('test3'),
+    genere(Nom),
+    nl, write('test4'),
+	concat(Abi, [(Nom, NCA)], Abi1),
+    nl, write('test5'),
     nl, write('Proposition ajoutee avec succes : '), write(concept_inter_vide(C1, C2)), nl.
-    
-
