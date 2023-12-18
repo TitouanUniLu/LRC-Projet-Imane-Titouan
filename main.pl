@@ -24,18 +24,18 @@ listAboxRole(AboxRole):- setof((I1, I2, R), instR(I1, I2, R), AboxRole).
 %Implémentation de la partie 1 
 
 %concepts
-concept(and(C1,C2)) :- concept(C1), concept(C2).
-concept(or(C1,C2)) :- concept(C1) , concept(C2).
-concept(not(C1)) :- concept(C1).
-concept(all(R, C1)) :- rname(R), concept(C1).
-concept(some(R, C1)) :- rname(R), concept(C1).
-concept(C1) :- cnamea(C1).
-concept(C1) :- cnamena(C1).
-concept(C,E) :- cnamena(C), concept(E).
+concept(and(C1,C2)) :- concept(C1), concept(C2),!.
+concept(or(C1,C2)) :- concept(C1) , concept(C2),!.
+concept(not(C1)) :- concept(C1),!.
+concept(all(R, C1)) :- rname(R), concept(C1),!.
+concept(some(R, C1)) :- rname(R), concept(C1),!.
+concept(C1) :- cnamea(C1),!.
+concept(C1) :- cnamena(C1),!.
+concept(C,E) :- cnamena(C), concept(E),!.
 
-concept(I,C):- iname(I), cnamea(C).
-concept(I,C):- iname(I), cnamena(C).
-concept(I1, I2, R):- iname(I1), iname(I2), rname(R).
+concept(I,C):- iname(I), cnamea(C),!.
+concept(I,C):- iname(I), cnamena(C),!.
+concept(I1, I2, R):- iname(I1), iname(I2), rname(R),!.
 
 verifier_concept(Tbox, AboxInst, AboxRole) :-
     listTBox(Tbox),
@@ -179,9 +179,7 @@ acquisition_prop_type2(Abi, Abi1, _) :-
     remplace(C2, CA2),
     nnf(and(CA1, CA2), NCA),
     genere(Nom),
-    nl, write('test4'),
 	concat([(Nom, NCA)], Abi, Abi1),
-    nl, write('test5'),
     nl, write('Proposition ajoutee avec succes : '), write(concept_inter_vide(C1, C2)), nl.
 
 
@@ -191,12 +189,10 @@ acquisition_prop_type2(Abi, Abi1, _) :-
 %Implémentation de la partie 3
 
 
-
 troisieme_etape(Abi,Abr) :-
     tri_Abox(Abi,Lie,Lpt,Li,Lu,Ls),
     resolution(Lie,Lpt,Li,Lu,Ls,Abr),
-    nl,write('Youpiiiiii, on a demontre la
-    proposition initiale !!!').
+    nl,write('Youpiiiiii, on a demontre la proposition initiale !!!').
 
 % Trie les assertions de la Abox étendue dans différentes listes selon leur type
 tri_Abox([],[],[],[],[],[]).
@@ -212,39 +208,84 @@ tri_Abox([(I,C)|Abi],Lie,Lpt,Li,Lu,[(I,C)|Ls]) :-
     tri_Abox(Abi,Lie,Lpt,Li,Lu,Ls),!.
 
 % Met à jour l'état de la Abox étendue en ajoutant une nouvelle assertion.
-% les assertions de concepts sont ajoutées à la liste correspondante.
+% les assertions de concepts sont ajoutées à la liste correspondante s ils ne sont pas deja dans leurs listes.
+evolue((I, some(R, C)), Lie, Lpt, Li, Lu, Ls, Lie, Lpt, Li, Lu, Ls) :-
+    member((I,some(R,C)),Lie).
 evolue((I, some(R, C)), Lie, Lpt, Li, Lu, Ls, Lie1, Lpt, Li, Lu, Ls) :-
-    concat([(I, some(R, C))], Lie, Lie1), !.
+    \+ member((I,some(R,C)),Lie),
+    concat([(I, some(R, C))], Lie, Lie1),!.
+evolue((I, and(C1, C2)), Lie, Lpt, Li, Lu, Ls, Lie, Lpt, Li, Lu, Ls) :-
+    member((I, and(C1, C2)),Li).
 evolue((I, and(C1, C2)), Lie, Lpt, Li, Lu, Ls, Lie, Lpt, Li1, Lu, Ls) :-
-    concat([(I, and(C1, C2))], Li, Li1), !.
+    \+ member((I, and(C1, C2)),Li),   
+    concat([(I, and(C1, C2))], Li, Li1),!.
+evolue((I, all(R, C)), Lie, Lpt, Li, Lu, Ls, Lie, Lpt, Li, Lu, Ls) :-
+    member((I, all(R, C)),Lpt).
 evolue((I, all(R, C)), Lie, Lpt, Li, Lu, Ls, Lie, Lpt1, Li, Lu, Ls) :-
-    concat([(I, all(R, C))], Lpt, Lpt1), !.
+    \+ member((I, all(R, C)),Lpt),
+    concat([(I, all(R, C))], Lpt, Lpt1),!.
+evolue((I, or(C1, C2)), Lie, Lpt, Li, Lu, Ls, Lie, Lpt, Li, Lu, Ls) :-
+    member((I, or(C1, C2)),Lu).
 evolue((I, or(C1, C2)), Lie, Lpt, Li, Lu, Ls, Lie, Lpt, Li, Lu1, Ls) :-
-    concat([(I, or(C1, C2))], Lu, Lu1), !.
+    \+ member((I, or(C1, C2)),Lu),
+    concat([(I, or(C1, C2))], Lu, Lu1),!.
+evolue((I,C), Lie, Lpt, Li, Lu, Ls, Lie, Lpt, Li, Lu, Ls) :-
+    member((I,C), Ls).
 evolue((I, C), Lie, Lpt, Li, Lu, Ls, Lie, Lpt, Li, Lu, Ls1) :-
-    concat([(I, C)], Ls, Ls1), !.
+    \+ member((I, C),Ls),
+    concat([(I, C)], Ls, Ls1),!.
+evolue([X|Y], Lie, Lpt, Li, Lu, Ls, Lie2, Lpt2, Li2, Lu2, Ls2) :-
+    evolue(X, Lie, Lpt, Li, Lu, Ls, Lie1, Lpt1, Li1, Lu1, Ls1),
+    evolue(Y, Lie1, Lpt1, Li1, Lu1, Ls1, Lie2, Lpt2, Li2, Lu2, Ls2).
+evolue([], Lie, Lpt, Li, Lu, Ls, Lie, Lpt, Li, Lu, Ls).
+
+
+test_clash(Ls) :-
+    member((I,C),Ls),
+    member((I,not(C)),Ls).
+
+resolution(Lie, Lpt, Li, Lu, Ls, Abr) :-
+    \+ test_clash(Ls),
+    complete_some(Lie, Lpt, Li, Lu, Ls, Abr).	
+resolution([], Lpt, Li, Lu, Ls, Abr) :- true.
+    %...
+
 
 % appliquer la règle 'il existe'
 complete_some([(I,some(R,C)) | Lie], Lpt, Li, Lu, Ls, Abr) :-
+    write('Regle \u2203 sur : '), affiche((I, some(R,C))), nl,
 	genere(Nom),                                                          % generer un nouvel objet
-	evolue((Nom, C), Lie, Lpt, Li, Lu, Ls, Lie1, Lpt1, Li1, Lu1, Ls1), 	  % ajouter la nouvelle assertion de concept
+	evolue((Nom, C), Lie, Lpt, Li, Lu, Ls, Lie1, Lpt1, Li1, Lu1, Ls1),!, 	  % ajouter la nouvelle assertion de concept
 	affiche_evolution_Abox(Ls, [(I,some(R,C)) | Lie], Lpt, Li, Lu, Abr, Ls1, Lie1, Lpt1, Li1, Lu1, [(I, Nom, R) | Abr]), 
     resolution(Lie1, Lpt1, Li1, Lu1, Ls1, [(I, Nom, R) | Abr]). 	      % ajouter la nouvelle assertion de role + Appel récursif
 
 % appliquer la règle 'and'
 transformation_and(Lie,Lpt,[(I,and(C1,C2))|Li],Lu,Ls,Abr) :-
-    evolue((I,C1),Lie,Lpt,Li,Lu,Ls,Lie1,Lpt1,Li1,Lu1,Ls1),          % ajouter la partie gauche
-    evolue((I,C2),Lie1,Lpt1,Li1,Lu1,Ls1,Lie2,Lpt2,Li2,Lu2,Ls2),     % ajouter la partie droite
-	affiche_evolution_Abox(Ls, Lie, Lpt, [(I, and(C1,C2)) | Li], Lu, Abr, Ls1, Lie1, Lpt1, Li1, Lu1, Abr),
-    resolution(Lie2,Lpt2,Li2,Lu2,Ls2,Abr). 
+    write('Regle \u2A05 sur : '), affiche((I, and(C1,C2))), nl,
+    evolue((I,C1),Lie,Lpt,Li,Lu,Ls,Lie1,Lpt1,Li1,Lu1,Ls1),!,          % ajouter la partie gauche
+    evolue((I,C2),Lie1,Lpt1,Li1,Lu1,Ls1,Lie2,Lpt2,Li2,Lu2,Ls2),!,     % ajouter la partie droite au meme noeud
+    affiche_evolution_Abox(Ls, Lie, Lpt, [(I, and(C1,C2)) | Li], Lu, Abr, Ls2, Lie2, Lpt2, Li2, Lu2, Abr),
+    resolution(Lie2,Lpt2,Li2,Lu2,Ls2,Abr).                          % appel recursif
+
+% appliquer la règle 'or'
+transformation_or(Lie,Lpt,Li,[(I,or(C1,C2))|Lu],Ls,Abr):-
+    write('Regle \u2A06 sur : '), affiche((I, or(C1,C2))), nl.
+    %...
+
+% appliquer la règle 'quel que soit'
+deduction_all(Lie,[(I,all(R,C))|Lpt],Li,Lu,Ls,Abr) :- 
+    write('Regle \u2200 sur : '), affiche((I, all(R,C))), nl.
+    %...
 
 affiche_evolution_Abox(Ls1, Lie1, Lpt1, Li1, Lu1, Abr1, Ls2, Lie2, Lpt2, Li2, Lu2, Abr2) :- 
-    write("------------------------------------------------------------------------------------------"), nl,
-    write("Etat de depart de la Abox :"),
-    affiche(Ls1), affiche(Lie1), affiche(Lpt1), affiche(Li1), affiche(Lu1), affiche(Abr1), nl, nl,
-    write("Etat d’arrivee de la Abox :"),
-    affiche(Ls2), affiche(Lie2), affiche(Lpt2), affiche(Li2), affiche(Lu2), affiche(Abr2), nl,
-    write("------------------------------------------------------------------------------------------"), nl, !.
+    write("---------------------------------------------------------------------------------------"), nl,
+    write("Etat de depart de la Abox :"), nl,
+    write("---------------------------"),
+    affiche(Ls1), affiche(Lie1), affiche(Lpt1), affiche(Li1), affiche(Lu1), nl, affiche(Abr1), nl, nl,
+    write("Etat d'arrivee de la Abox :"), nl,
+    write("---------------------------"),
+    affiche(Ls2), affiche(Lie2), affiche(Lpt2), affiche(Li2), affiche(Lu2), nl, affiche(Abr2), nl,
+    write("---------------------------------------------------------------------------------------"), nl, nl, nl, !.
 
 affiche([]).
 affiche([X | Y]) :- affiche(X), affiche(Y).
