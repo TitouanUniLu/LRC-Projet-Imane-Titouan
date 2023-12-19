@@ -138,7 +138,7 @@ deuxieme_etape(Abi, Abi1, Tbox) :-
 saisie_et_traitement_prop_a_demontrer(Abi, Abi1, Tbox) :-
     nl, write('Entrez le numéro du type de proposition que vous voulez démontrer :'), nl,
     write('1. Une instance donnée appartient à un concept donné.'), nl,
-    write('2. Deux concepts n'ont pas d'éléments en commun (ils ont une intersection vide).'), nl,
+    write('2. Deux concepts n\'ont pas d\'éléments en commun (ils ont une intersection vide).'), nl,
     read(R), suite(R, Abi, Abi1, Tbox).
 
 suite(1, Abi, Abi1, Tbox) :-
@@ -251,10 +251,10 @@ resolution(Lie, Lpt, Li, Lu, Ls, Abr) :-
     transformation_and(Lie, Lpt, Li, Lu, Ls, Abr).
 resolution(Lie, Lpt, Li, Lu, Ls, Abr) :-
     clash(Ls),
-    transformation_or(Lie, Lpt, Li, Lu, Ls, Abr).
+    deduction_all(Lie, Lpt, Li, Lu, Ls, Abr).
 resolution(Lie, Lpt, Li, Lu, Ls, Abr) :-
     clash(Ls),
-    deduction_all(Lie, Lpt, Li, Lu, Ls, Abr).
+    transformation_or(Lie, Lpt, Li, Lu, Ls, Abr).
 
 
 % appliquer la règle 'il existe'
@@ -275,20 +275,21 @@ transformation_and(Lie,Lpt,[(I,and(C1,C2))|Li],Lu,Ls,Abr) :-
 
 % appliquer la règle 'or'
 transformation_or(Lie,Lpt,Li,[(I,or(C1,C2))|Lu],Ls,Abr):-
-    write('Regle \u2A06 sur : '), affiche((I, or(C1,C2))), nl.
-    evolue((I,C1),Lie,Lpt,Li,Tu,Ls,Lie1g,Lpt1g,Li1g,Lu1g,Ls1g), % concept gauche
-    affiche_evolution_Abox(Ls,Lie,Lpt,Li,[(I,or(C1,C2))|Tu],Abr,Ls1g,Lie1g,Lpt1g,Li1g,Lu1g,Abr), % affiche
-    evolue((I,C2),Lie,Lpt,Li,Tu,Ls,Lie1d,Lpt1d,Li1d,Lu1d,Ls1d), % concept droit
-    affiche_evolution_Abox(Ls,Lie,Lpt,Li,[(I,or(C1,C2))|Tu],Abr,Ls1d,Lie1d,Lpt1d,Li1d,Lu1d,Abr), % affiche
-    resolution(Lie1g,Lpt1g,Li1g,Lu1g,Ls1g,Abr),
-    resolution(Lie1d,Lpt1d,Li1d,Lu1d,Ls1d,Abr).
+    write('Regle \u2A06 sur : '), affiche((I, or(C1,C2))), nl,
+    evolue((I,C1),Lie,Lpt,Li,Lu,Ls,Lie1,Lpt1,Li1,Lu1,Ls1), % concept gauche
+    affiche_evolution_Abox(Ls,Lie,Lpt,Li,[(I,or(C1,C2))|Lu],Abr,Ls1,Lie1,Lpt1,Li1,Lu1,Abr), % affiche
+    evolue((I,C2),Lie,Lpt,Li,Lu,Ls,Lie2,Lpt2,Li2,Lu2,Ls2), % concept droit
+    affiche_evolution_Abox(Ls,Lie,Lpt,Li,[(I,or(C1,C2))|Lu],Abr,Ls2,Lie2,Lpt2,Li2,Lu2,Abr), % affiche
+    resolution(Lie1,Lpt1,Li1,Lu1,Ls1,Abr),
+    resolution(Lie2,Lpt2,Li2,Lu2,Ls2,Abr).
     
 
 % appliquer la règle 'quel que soit'
 deduction_all(Lie,[(I,all(R,C))|Lpt],Li,Lu,Ls,Abr) :- 
-    write('Regle \u2200 sur : '), affiche((I, all(R,C))), nl.
+    write('Regle \u2200 sur : '), affiche((I, all(R,C))), nl,
     member((I,B,R),Abr), 
     evolue((B,C),Lie,Lpt,Li,Lu,Ls,Lie1,Lpt1,Li1,Lu1,Ls1), 
+    affiche_evolution_Abox(Ls,Lie, [(I,all(R,C))|Lpt], Li, Lu , Abr, Ls1, Lie1, Lpt1, Li1, Lu1, Abr),
     resolution(Lie1,Lpt1,Li1,Lu1,Ls1,Abr).
 
 affiche_evolution_Abox(Ls1, Lie1, Lpt1, Li1, Lu1, Abr1, Ls2, Lie2, Lpt2, Li2, Lu2, Abr2) :- 
@@ -315,13 +316,7 @@ affiche(all(R, C)) :- write('\u2200'), write(R), write('.'), affiche(C), !.
 affiche(C) :- write(C).
 
 
-
-
-
-
-
 %Utils
-
 concat([],L1,L1).
 concat([X|Y],L1,[X|L2]) :- concat(Y,L1,L2).
 
