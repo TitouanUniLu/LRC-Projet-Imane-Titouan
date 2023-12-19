@@ -48,7 +48,7 @@ verifier_concept(Tbox, AboxInst, AboxRole) :-
     ; member((I1,I2,R), AboxRole), \+ concept(I1,I2,R), 
       write('Concept invalide dans : '), write((I1,I2,R)), nl, !, fail
     ; true), 
-    write("Verification : Syntaxe et semantique correctes"), nl.
+    write('Verification : Syntaxe et semantique correctes'), nl.
 
 %autoref 
 autoref(C, C) :- cnamea(C), !.
@@ -68,8 +68,8 @@ pas_autoref([]).
 
 verifier_auto_reference(Tbox) :- 
     listTBox(Tbox),
-    (pas_autoref(Tbox), write("Cette T-Box n\'est pas auto-referente."), nl,!
-    ;   write("Erreur : Auto-reference detectee. "),fail), nl.
+    (pas_autoref(Tbox), write('Cette T-Box n\'est pas auto-referente.'), nl,!
+    ;   write('Erreur : Auto-reference detectee. '),fail), nl.
 % Si aucune auto-référence n'est détectée, elle affiche un message indiquant que la T-Box n'est pas auto-référente.
 % Sinon, elle affiche un message d'erreur indiquant que l'auto-référence a été détectée et provoque un échec. 
 
@@ -138,7 +138,7 @@ deuxieme_etape(Abi, Abi1, Tbox) :-
 saisie_et_traitement_prop_a_demontrer(Abi, Abi1, Tbox) :-
     nl, write('Entrez le numéro du type de proposition que vous voulez démontrer :'), nl,
     write('1. Une instance donnée appartient à un concept donné.'), nl,
-    write('2. Deux concepts n"ont pas d"éléments en commun (ils ont une intersection vide).'), nl,
+    write('2. Deux concepts n'ont pas d'éléments en commun (ils ont une intersection vide).'), nl,
     read(R), suite(R, Abi, Abi1, Tbox).
 
 suite(1, Abi, Abi1, Tbox) :-
@@ -240,15 +240,21 @@ evolue([X|Y], Lie, Lpt, Li, Lu, Ls, Lie2, Lpt2, Li2, Lu2, Ls2) :-
 evolue([], Lie, Lpt, Li, Lu, Ls, Lie, Lpt, Li, Lu, Ls).
 
 
-test_clash(Ls) :-
-    member((I,C),Ls),
-    member((I,not(C)),Ls).
+clash([]).
+clash([(I,C)|Ls]) :- nnf(not(C),D), not(member((I,D),Ls)), clash(Ls).
 
 resolution(Lie, Lpt, Li, Lu, Ls, Abr) :-
-    \+ test_clash(Ls),
+    clash(Ls),
     complete_some(Lie, Lpt, Li, Lu, Ls, Abr).	
-resolution([], Lpt, Li, Lu, Ls, Abr) :- true.
-    %...
+resolution(Lie, Lpt, Li, Lu, Ls, Abr) :-
+    clash(Ls),
+    transformation_and(Lie, Lpt, Li, Lu, Ls, Abr).
+resolution(Lie, Lpt, Li, Lu, Ls, Abr) :-
+    clash(Ls),
+    transformation_or(Lie, Lpt, Li, Lu, Ls, Abr).
+resolution(Lie, Lpt, Li, Lu, Ls, Abr) :-
+    clash(Ls),
+    deduction_all(Lie, Lpt, Li, Lu, Ls, Abr).
 
 
 % appliquer la règle 'il existe'
@@ -270,34 +276,42 @@ transformation_and(Lie,Lpt,[(I,and(C1,C2))|Li],Lu,Ls,Abr) :-
 % appliquer la règle 'or'
 transformation_or(Lie,Lpt,Li,[(I,or(C1,C2))|Lu],Ls,Abr):-
     write('Regle \u2A06 sur : '), affiche((I, or(C1,C2))), nl.
-    %...
+    evolue((I,C1),Lie,Lpt,Li,Tu,Ls,Lie1g,Lpt1g,Li1g,Lu1g,Ls1g), % concept gauche
+    affiche_evolution_Abox(Ls,Lie,Lpt,Li,[(I,or(C1,C2))|Tu],Abr,Ls1g,Lie1g,Lpt1g,Li1g,Lu1g,Abr), % affiche
+    evolue((I,C2),Lie,Lpt,Li,Tu,Ls,Lie1d,Lpt1d,Li1d,Lu1d,Ls1d), % concept droit
+    affiche_evolution_Abox(Ls,Lie,Lpt,Li,[(I,or(C1,C2))|Tu],Abr,Ls1d,Lie1d,Lpt1d,Li1d,Lu1d,Abr), % affiche
+    resolution(Lie1g,Lpt1g,Li1g,Lu1g,Ls1g,Abr),
+    resolution(Lie1d,Lpt1d,Li1d,Lu1d,Ls1d,Abr).
+    
 
 % appliquer la règle 'quel que soit'
 deduction_all(Lie,[(I,all(R,C))|Lpt],Li,Lu,Ls,Abr) :- 
     write('Regle \u2200 sur : '), affiche((I, all(R,C))), nl.
-    %...
+    member((I,B,R),Abr), 
+    evolue((B,C),Lie,Lpt,Li,Lu,Ls,Lie1,Lpt1,Li1,Lu1,Ls1), 
+    resolution(Lie1,Lpt1,Li1,Lu1,Ls1,Abr).
 
 affiche_evolution_Abox(Ls1, Lie1, Lpt1, Li1, Lu1, Abr1, Ls2, Lie2, Lpt2, Li2, Lu2, Abr2) :- 
-    write("---------------------------------------------------------------------------------------"), nl,
-    write("Etat de depart de la Abox :"), nl,
-    write("---------------------------"),
+    write('---------------------------------------------------------------------------------------'), nl,
+    write('Etat de depart de la Abox :'), nl,
+    write('---------------------------'),
     affiche(Ls1), affiche(Lie1), affiche(Lpt1), affiche(Li1), affiche(Lu1), nl, affiche(Abr1), nl, nl,
-    write("Etat d'arrivee de la Abox :"), nl,
-    write("---------------------------"),
+    write('Etat d\'arrivee de la Abox :'), nl,
+    write('---------------------------'),
     affiche(Ls2), affiche(Lie2), affiche(Lpt2), affiche(Li2), affiche(Lu2), nl, affiche(Abr2), nl,
-    write("---------------------------------------------------------------------------------------"), nl, nl, nl, !.
+    write('---------------------------------------------------------------------------------------'), nl, nl, nl, !.
 
 affiche([]).
 affiche([X | Y]) :- affiche(X), affiche(Y).
 
 % Afficher un concept en utilisant les symboles mathématiques appropriés.
-affiche((I1, I2, R)) :- nl, write("<"), write(I1), write(","), write(I2), write(">: "), write(R), !.
-affiche((I, C)) :- nl, write(I), write(": "), affiche(C), !.
-affiche(not(C)) :- write("\u00AC"), affiche(C), !.
-affiche(and(C1, C2)) :- affiche(C1), write(" \u2A05 "), affiche(C2), !.
-affiche(or(C1, C2)) :- affiche(C1), write(" \u2A06 "), affiche(C2), !.
-affiche(some(R, C)) :- write("\u2203"), write(R), write("."), affiche(C), !.
-affiche(all(R, C)) :- write("\u2200"), write(R), write("."), affiche(C), !.
+affiche((I1, I2, R)) :- nl, write('<'), write(I1), write(','), write(I2), write('>: '), write(R), !.
+affiche((I, C)) :- nl, write(I), write(': '), affiche(C), !.
+affiche(not(C)) :- write('\u00AC'), affiche(C), !.
+affiche(and(C1, C2)) :- affiche(C1), write(' \u2A05 '), affiche(C2), !.
+affiche(or(C1, C2)) :- affiche(C1), write(' \u2A06 '), affiche(C2), !.
+affiche(some(R, C)) :- write('\u2203'), write(R), write('.'), affiche(C), !.
+affiche(all(R, C)) :- write('\u2200'), write(R), write('.'), affiche(C), !.
 affiche(C) :- write(C).
 
 
